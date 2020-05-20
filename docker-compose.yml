@@ -1,0 +1,49 @@
+version: "3"
+services:
+  neo4jdb:
+    image: neo4j
+    container_name: MyNeo4JServiceDB
+    ports: 
+        - "7474:7474"
+        - "7687:7687"
+    environment:
+        NEO4J_PASSWORD: password
+    networks:
+        - default
+  mysqldb:
+    image: mysql:5.7
+    container_name: MySQLServiceDB
+    ports: 
+        - "3307:3306"
+    environment:
+        MYSQL_USER: dev
+        MYSQL_PASSWORD: 123456
+        MYSQL_ROOT_PASSWORD: test 
+    volumes:
+        - ./databases/dump:/docker-entrypoint-initdb.d
+        - persistent:/var/lib/mysql
+    networks:
+        - default
+    healthcheck:
+        # test: mysqladmin ping -h 127.0.0.1 -u $$MYSQL_USER --password=$$MYSQL_PASSWORD
+        test: "/usr/bin/mysql --user=root --password=test --execute \"SHOW DATABASES;\""
+        interval: 2s
+        timeout: 20s
+        retries: 10
+  usersapi:
+    build: ./python_users_service_api
+    image: python_users_service_api
+    container_name: pythonServiceUsersAPI
+    command: python3 main.py
+    restart: on-failure
+    depends_on:
+      - mysqldb
+    links:
+      - mysqldb
+    ports:
+      - 5011:5011
+    networks:
+        - default
+volumes:
+    persistent:
+

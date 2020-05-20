@@ -1,0 +1,5 @@
+mysql -h ipweb -u usuariobbdd -p
+
+mysql -h ipweb -u root -p
+
+password: test
